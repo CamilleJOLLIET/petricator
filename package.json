@@ -1,0 +1,25 @@
+{
+  "name": "petricator",
+  "version": "1.0.0",
+  "description": "Petit bot discord qui permet de mutualiser des informations relatives au jeu Mounty Hall",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --project tsconfig.json",
+    "start": "node ."
+  },
+  "keywords": [],
+  "author": "La Petriche",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "djs-commander": "^0.0.50",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.13.1",
+    "mongoose": "^8.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsx": "^4.19.3"
+  }
+}
