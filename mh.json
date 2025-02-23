@@ -1,19 +1,12 @@
 {
-    "targets": [
-        {
-            "id": "11111",
-            "name": "Sidoine",
-            "position": "10 -10 -20"
-        },
-        {
-            "id": "22222",
-            "name": "Balrog",
-            "position": "-40 50 -12"
-        },
-        {
-            "id": "33333",
-            "name": "Cageux",
-            "position": "à portée de tir"
-        }
-    ]
+  "targets": [
+    { "id": "11111", "name": "Sidoine", "position": "10 -10 -20" },
+    { "id": "22222", "name": "Balrog", "position": "-40 50 -12" },
+    {
+      "id": "176543",
+      "name": "Cageux",
+      "position": "14 -54 -56",
+      "details": "On le bute !"
+    }
+  ]
 }
