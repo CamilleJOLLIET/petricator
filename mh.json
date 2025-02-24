@@ -1,12 +1,1 @@
-{
-  "targets": [
-    { "id": "11111", "name": "Sidoine", "position": "10 -10 -20" },
-    { "id": "22222", "name": "Balrog", "position": "-40 50 -12" },
-    {
-      "id": "176543",
-      "name": "Cageux",
-      "position": "14 -54 -56",
-      "details": "On le bute !"
-    }
-  ]
-}
+{"targets":[{"id":"76353","name":"Cageux","position":"Pas loin... vraiment pas loin...","details":"On tire à vue !"}]}

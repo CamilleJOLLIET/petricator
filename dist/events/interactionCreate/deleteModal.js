@@ -5,6 +5,8 @@ module.exports = async (interaction) => {
     if (!interaction.isModalSubmit())
         return;
     const { customId } = interaction;
-    if (customId === 'addTargetModal')
-        (0, targets_1.addTarget)({ interaction });
+    if (customId === 'deleteTargetModal')
+        (0, targets_1.deleteTarget)({ interaction });
+    if (customId === 'deleteAllTargetsModal')
+        (0, targets_1.deleteAllTargets)({ interaction });
 };

@@ -8,7 +8,7 @@ module.exports = {
 
         const subcommand = interaction.options.getSubcommand('targets');
 
-        if (subcommand === 'targets') showTargets({ interaction }, mh.targets);
+        if (subcommand === 'targets') showTargets({ interaction });
     },
     data: new SlashCommandBuilder()
         .setName('show')
