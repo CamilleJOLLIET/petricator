@@ -1,16 +1,10 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalActionRowComponentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Target } from "../types/Target";
 import * as fs from 'fs';
-import * as path from 'path';
-
-const filePath = path.resolve(__dirname, '../../mh.json');
-
-export const getTargets = (): Target[] => {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8')).targets;
-};
+import { getMh, filePath } from "../utils/getMh";
 
 export const showTargets = ({ interaction }): void => {
-    const targets: Target[] = getTargets();
+    const targets: Target[] = getMh().targets;
     const embed = new EmbedBuilder()
         .setTitle('🎯 Cibles prioritaires 🎯')
         .setColor('#FF69B4');
@@ -74,7 +68,7 @@ export const addTarget = async ({ interaction }): Promise<void> => {
             details: interaction.fields.getTextInputValue('detailsInput'),
         };
     
-        const mhFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const mhFile = getMh();
     
         mhFile.targets.push(newTarget);
         fs.writeFileSync(filePath, JSON.stringify(mhFile, null));
@@ -108,7 +102,7 @@ export const deleteTarget = async ({ interaction }): Promise<void> => {
     try {
         const targetId = interaction.fields.getTextInputValue('idInput');
     
-        const targetsFile = JSON.parse(fs.readFileSync(filePath, 'utf-8')).targets;
+        const targetsFile = getMh().targets;
         const targetObject = targetsFile.find(target => target.id === targetId);
         
         if (!targetObject) {
@@ -172,7 +166,7 @@ export const deleteAllTargetsConfirmation = async ({ interaction }): Promise<voi
 };
 export const deleteAllTargets = async ({ interaction }): Promise<void> => {
     try {
-        const mhFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const mhFile = getMh();
         mhFile.targets = [];
 
         fs.writeFileSync(filePath, JSON.stringify(mhFile, null, 2));
@@ -182,5 +176,80 @@ export const deleteAllTargets = async ({ interaction }): Promise<void> => {
 
     return;
 };
-export const editTargetModal = async ({ interaction }): Promise<void> => {console.log('editTargetModal')};
-export const editTarget = async ({ interaction }): Promise<void> => {console.log('editTarget')};
+export const updateTargetModal = async ({ interaction }): Promise<void> => {
+    const updateTargetModal = new ModalBuilder()
+        .setCustomId('updateTargetModal')
+        .setTitle('Modifie une cible prioritaire');
+
+    const idInput = new TextInputBuilder()
+        .setCustomId('idInput')
+        .setLabel('ID du bestiau')
+        .setPlaceholder("Rend pas fou avé les brackets, juste l'ID.")
+        .setStyle(TextInputStyle.Short);
+
+    const nameInput = new TextInputBuilder()
+        .setCustomId('nameInput')
+        .setLabel('Nom du bestiau')
+        .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
+        .setRequired(false)
+        .setStyle(TextInputStyle.Short);
+
+    const positionInput = new TextInputBuilder()
+        .setCustomId('positionInput')
+        .setLabel('Position du bestiau')
+        .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
+        .setRequired(false)
+        .setStyle(TextInputStyle.Short);
+
+    const detailsInput = new TextInputBuilder()
+        .setCustomId('detailsInput')
+        .setLabel('Consignes supplémentaires')
+        .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
+        .setRequired(false)
+        .setStyle(TextInputStyle.Paragraph);
+
+    updateTargetModal
+        .addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(idInput))
+        .addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(nameInput))
+        .addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(positionInput))
+        .addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(detailsInput));
+
+    await interaction.showModal(updateTargetModal);
+};
+
+export const updateTarget = async ({ interaction }): Promise<void> => {
+    try {
+        const targetId = interaction.fields.getTextInputValue('idInput');
+        const name = interaction.fields.getTextInputValue('nameInput');
+        const position = interaction.fields.getTextInputValue('positionInput');
+        const details = interaction.fields.getTextInputValue('detailsInput');
+    
+        const mhFile = getMh();
+        const targetObject = mhFile.targets.find(target => target.id === targetId);
+        
+        if (!targetObject) {
+            await interaction.reply({ content: 'Cible non trouvée.', ephemeral: true });
+            return;
+        }
+    
+        const updatedTargetObject = mhFile.targets.map(target => {
+            if (target.id === targetId) {
+                if (name) target.name = name;
+                if (position) target.position = position;
+                if (details) target.details = details;
+            }
+            return target;
+        });
+
+        mhFile.targets = updatedTargetObject;
+    
+        fs.writeFileSync(filePath, JSON.stringify(mhFile, null, 2));
+    
+        await interaction.reply({ content: 'La cible a bien été modifiée', ephemeral: true });
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'Une erreur est survenue, veuillez réessayer.', ephemeral: true });        
+    }
+
+    return;
+};

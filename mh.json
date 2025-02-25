@@ -1,1 +1,28 @@
-{"targets":[{"id":"76353","name":"Cageux","position":"Pas loin... vraiment pas loin...","details":"On tire à vue !"}]}
+{
+  "targets": [
+    {
+      "id": "76353",
+      "name": "Cageux",
+      "position": "Il tente de s'enfuir !",
+      "details": "On tire à vue !"
+    }
+  ],
+  "instructions": [
+    {
+      "content": "Il faut soigner Cageux !",
+			"usersConcerned": [
+        "76353",
+        "@sacroteur"
+      ],
+			"date": "2025-02-25T04:43:51+00:00"
+    },
+		{
+      "content": "Non ! En fait on le bute !",
+			"usersConcerned": [
+        "76353",
+        "@sacroteur"
+      ],
+			"date": "2025-02-25T04:43:51+00:00"
+    }
+  ]
+}

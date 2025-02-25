@@ -33,17 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editTarget = exports.editTargetModal = exports.deleteAllTargets = exports.deleteAllTargetsConfirmation = exports.deleteTarget = exports.deleteTargetModal = exports.addTarget = exports.addTargetModal = exports.showTargets = exports.getTargets = void 0;
+exports.updateTarget = exports.updateTargetModal = exports.deleteAllTargets = exports.deleteAllTargetsConfirmation = exports.deleteTarget = exports.deleteTargetModal = exports.addTarget = exports.addTargetModal = exports.showTargets = void 0;
 const discord_js_1 = require("discord.js");
 const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
-const filePath = path.resolve(__dirname, '../../mh.json');
-const getTargets = () => {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8')).targets;
-};
-exports.getTargets = getTargets;
+const getMh_1 = require("../utils/getMh");
 const showTargets = ({ interaction }) => {
-    const targets = (0, exports.getTargets)();
+    const targets = (0, getMh_1.getMh)().targets;
     const embed = new discord_js_1.EmbedBuilder()
         .setTitle('🎯 Cibles prioritaires 🎯')
         .setColor('#FF69B4');
@@ -101,9 +96,9 @@ const addTarget = async ({ interaction }) => {
             position: interaction.fields.getTextInputValue('positionInput'),
             details: interaction.fields.getTextInputValue('detailsInput'),
         };
-        const mhFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const mhFile = (0, getMh_1.getMh)();
         mhFile.targets.push(newTarget);
-        fs.writeFileSync(filePath, JSON.stringify(mhFile, null));
+        fs.writeFileSync(getMh_1.filePath, JSON.stringify(mhFile, null));
         await interaction.reply({ content: 'La cible a bien été ajoutée', ephemeral: true });
     }
     catch (error) {
@@ -129,14 +124,14 @@ exports.deleteTargetModal = deleteTargetModal;
 const deleteTarget = async ({ interaction }) => {
     try {
         const targetId = interaction.fields.getTextInputValue('idInput');
-        const targetsFile = JSON.parse(fs.readFileSync(filePath, 'utf-8')).targets;
+        const targetsFile = (0, getMh_1.getMh)().targets;
         const targetObject = targetsFile.find(target => target.id === targetId);
         if (!targetObject) {
             await interaction.reply({ content: 'Cible non trouvée.', ephemeral: true });
             return;
         }
         const updatedTargetsFile = targetsFile.filter(target => target.id !== targetId);
-        fs.writeFileSync(filePath, JSON.stringify(updatedTargetsFile, null, 2));
+        fs.writeFileSync(getMh_1.filePath, JSON.stringify(updatedTargetsFile, null, 2));
         await interaction.reply({ content: 'La cible a bien été supprimée', ephemeral: true });
     }
     catch (error) {
@@ -186,9 +181,9 @@ const deleteAllTargetsConfirmation = async ({ interaction }) => {
 exports.deleteAllTargetsConfirmation = deleteAllTargetsConfirmation;
 const deleteAllTargets = async ({ interaction }) => {
     try {
-        const mhFile = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const mhFile = (0, getMh_1.getMh)();
         mhFile.targets = [];
-        fs.writeFileSync(filePath, JSON.stringify(mhFile, null, 2));
+        fs.writeFileSync(getMh_1.filePath, JSON.stringify(mhFile, null, 2));
     }
     catch (error) {
         console.error(error);
@@ -196,7 +191,72 @@ const deleteAllTargets = async ({ interaction }) => {
     return;
 };
 exports.deleteAllTargets = deleteAllTargets;
-const editTargetModal = async ({ interaction }) => { console.log('editTargetModal'); };
-exports.editTargetModal = editTargetModal;
-const editTarget = async ({ interaction }) => { console.log('editTarget'); };
-exports.editTarget = editTarget;
+const updateTargetModal = async ({ interaction }) => {
+    const updateTargetModal = new discord_js_1.ModalBuilder()
+        .setCustomId('updateTargetModal')
+        .setTitle('Modifie une cible prioritaire');
+    const idInput = new discord_js_1.TextInputBuilder()
+        .setCustomId('idInput')
+        .setLabel('ID du bestiau')
+        .setPlaceholder("Rend pas fou avé les brackets, juste l'ID.")
+        .setStyle(discord_js_1.TextInputStyle.Short);
+    const nameInput = new discord_js_1.TextInputBuilder()
+        .setCustomId('nameInput')
+        .setLabel('Nom du bestiau')
+        .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
+        .setRequired(false)
+        .setStyle(discord_js_1.TextInputStyle.Short);
+    const positionInput = new discord_js_1.TextInputBuilder()
+        .setCustomId('positionInput')
+        .setLabel('Position du bestiau')
+        .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
+        .setRequired(false)
+        .setStyle(discord_js_1.TextInputStyle.Short);
+    const detailsInput = new discord_js_1.TextInputBuilder()
+        .setCustomId('detailsInput')
+        .setLabel('Consignes supplémentaires')
+        .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
+        .setRequired(false)
+        .setStyle(discord_js_1.TextInputStyle.Paragraph);
+    updateTargetModal
+        .addComponents(new discord_js_1.ActionRowBuilder().addComponents(idInput))
+        .addComponents(new discord_js_1.ActionRowBuilder().addComponents(nameInput))
+        .addComponents(new discord_js_1.ActionRowBuilder().addComponents(positionInput))
+        .addComponents(new discord_js_1.ActionRowBuilder().addComponents(detailsInput));
+    await interaction.showModal(updateTargetModal);
+};
+exports.updateTargetModal = updateTargetModal;
+const updateTarget = async ({ interaction }) => {
+    try {
+        const targetId = interaction.fields.getTextInputValue('idInput');
+        const name = interaction.fields.getTextInputValue('nameInput');
+        const position = interaction.fields.getTextInputValue('positionInput');
+        const details = interaction.fields.getTextInputValue('detailsInput');
+        const mhFile = (0, getMh_1.getMh)();
+        const targetObject = mhFile.targets.find(target => target.id === targetId);
+        if (!targetObject) {
+            await interaction.reply({ content: 'Cible non trouvée.', ephemeral: true });
+            return;
+        }
+        const updatedTargetObject = mhFile.targets.map(target => {
+            if (target.id === targetId) {
+                if (name)
+                    target.name = name;
+                if (position)
+                    target.position = position;
+                if (details)
+                    target.details = details;
+            }
+            return target;
+        });
+        mhFile.targets = updatedTargetObject;
+        fs.writeFileSync(getMh_1.filePath, JSON.stringify(mhFile, null, 2));
+        await interaction.reply({ content: 'La cible a bien été modifiée', ephemeral: true });
+    }
+    catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'Une erreur est survenue, veuillez réessayer.', ephemeral: true });
+    }
+    return;
+};
+exports.updateTarget = updateTarget;
