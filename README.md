@@ -1,17 +1,17 @@
 TODO
 
-INSTRUCTIONS
 MISSIONS
 SPOTS
 
 OK
 
 TARGETS show/add/delete/update/deleteAll 👍
-INSTRUCTIONS show 👍
+INSTRUCTIONS show/add/delete/update/deleteAll 👍
 
 EN COURS
 
-INSTRUCTIONS add
+!! Mission !!
+
 
 Consignes de dev et de déploiement
 npm run build avant de push

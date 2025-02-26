@@ -1,7 +1,7 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalActionRowComponentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, EmbedBuilder, ModalActionRowComponentBuilder, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Target } from "../types/Target";
 import * as fs from 'fs';
-import { getMh, filePath } from "../utils/getMh";
+import { getMh, filePath, saveMh } from "../utils/getMh";
 
 export const showTargets = ({ interaction }): void => {
     const targets: Target[] = getMh().targets;
@@ -82,41 +82,23 @@ export const addTarget = async ({ interaction }): Promise<void> => {
     return;
 }
 
-export const deleteTargetModal = async ({ interaction }): Promise<void> => {
-    const deleteTargetModal = new ModalBuilder()
-        .setCustomId('deleteTargetModal')
-        .setTitle('Supprime une cible prioritaire');
-
-    const idInput = new TextInputBuilder()
-        .setCustomId('idInput')
-        .setLabel('ID du bestiau')
-        .setPlaceholder("Rend pas fou avé les brackets, juste l'ID.")
-        .setStyle(TextInputStyle.Short);
-
-    deleteTargetModal.addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(idInput));
-
-    await interaction.showModal(deleteTargetModal);
-};
-
-export const deleteTarget = async ({ interaction }): Promise<void> => {
+export const deleteTargetChoices = async ({ interaction }): Promise<void> => {
+    const response = await buildTargetsChoices({ interaction }, 'supprimer');
+    const collector = response.resource.message.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_000 });
+    
     try {
-        const targetId = interaction.fields.getTextInputValue('idInput');
-    
-        const targetsFile = getMh().targets;
-        const targetObject = targetsFile.find(target => target.id === targetId);
-        
-        if (!targetObject) {
-            await interaction.reply({ content: 'Cible non trouvée.', ephemeral: true });
-            return;
-        }
-    
-        const updatedTargetsFile = targetsFile.filter(target => target.id !== targetId);
-        fs.writeFileSync(filePath, JSON.stringify(updatedTargetsFile, null, 2));
-    
-        await interaction.reply({ content: 'La cible a bien été supprimée', ephemeral: true });
+        collector.on('collect', async i => {
+            const selection = i.values[0];
+            const mh = getMh();
+            mh.instructions.splice(parseInt(selection), 1);
+            saveMh(mh);
+            await i.reply(`La consigne a été supprimée !`);
+        });
     } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'Une erreur est survenue, veuillez réessayer.', ephemeral: true });        
+        await interaction.editReply({ 
+            content: `Une erreur est survenue pendant le choix de l'instruction à supprimer: ${error}`,
+            components: [] 
+        });
     }
 
     return;
@@ -149,12 +131,10 @@ export const deleteAllTargetsConfirmation = async ({ interaction }): Promise<voi
         const confirmation = await response.resource.message.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
 
         if (confirmation.customId === 'confirm') {
-            console.log('confirm');
             await confirmation.update({ content: `Allez c'est parti !`, components: [] });
             await deleteAllTargets({ interaction });
             await interaction.editReply({ content: `C'est bon c'est tout clean !` });
         } else if (confirmation.customId === 'cancel') {
-            console.log('cancel');
             await confirmation.update({ content: `Y'est pas fou lui...`, components: [] });
             await interaction.editReply({ content: `Allez on fait comme si rien ne s'était passé...` });
         }
@@ -164,6 +144,7 @@ export const deleteAllTargetsConfirmation = async ({ interaction }): Promise<voi
 
     return;
 };
+
 export const deleteAllTargets = async ({ interaction }): Promise<void> => {
     try {
         const mhFile = getMh();
@@ -176,29 +157,88 @@ export const deleteAllTargets = async ({ interaction }): Promise<void> => {
 
     return;
 };
-export const updateTargetModal = async ({ interaction }): Promise<void> => {
+
+const buildTargetsChoices = async ({ interaction }, action) => {
+    const mhFile = getMh();
+    const targets = mhFile.targets;
+
+    if (!targets.length) {
+        interaction.reply({ content: 'Aucune cible à mettre à jour.', ephemeral: true });
+        return;
+    }
+
+    const selectTargetInput = new StringSelectMenuBuilder()
+        .setCustomId('selectTargetInput')
+        .setPlaceholder("Liste des cibles existantes");
+
+    for (let index = 0; index < targets.length; index++) {
+        const element = targets[index];
+        const label = element.name.length > 50 ? `${element.name.slice(0, 50)}...` : element.name;
+        
+        selectTargetInput.addOptions(
+            new StringSelectMenuOptionBuilder()
+            .setLabel(label)
+            .setValue(index.toString())
+        )
+    }
+        
+    const row = new ActionRowBuilder()
+        .addComponents(selectTargetInput);
+
+    return await interaction.reply({
+        content: `Choisis la cible à ${action}.`,
+        components: [row],
+        withResponse: true,
+        ephemeral: true
+    });
+}
+
+export const updateTargetChoices = async ({ interaction }): Promise<void> => {
+    const response = await buildTargetsChoices({ interaction }, 'mettre à jour');
+    const collector = response.resource.message.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_000 });
+    
+    try {
+        collector.on('collect', async i => {
+            const selection = i.values[0];
+            const targets = getMh().targets;
+            const target = targets[parseInt(selection)];
+
+            await updateTargetModal(i, target, selection);
+        });
+    } catch (error) {
+        await interaction.editReply({ 
+            content: `Une erreur est survenue pendant le choix de l'instruction à supprimer: ${error}`,
+            components: [] 
+        });
+    }
+
+    return;
+};
+
+export const updateTargetModal = async (interaction, target, selection): Promise<void> => {
     const updateTargetModal = new ModalBuilder()
-        .setCustomId('updateTargetModal')
-        .setTitle('Modifie une cible prioritaire');
+        .setCustomId(`updateTargetModal-${selection}`)
+        .setTitle(`Modifie une cible prioritaire numéro ${parseInt(selection) + 1}`);
 
     const idInput = new TextInputBuilder()
         .setCustomId('idInput')
         .setLabel('ID du bestiau')
         .setPlaceholder("Rend pas fou avé les brackets, juste l'ID.")
+        .setValue(target.id)
         .setStyle(TextInputStyle.Short);
 
     const nameInput = new TextInputBuilder()
         .setCustomId('nameInput')
         .setLabel('Nom du bestiau')
         .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
-        .setRequired(false)
+        .setValue(target.name)
         .setStyle(TextInputStyle.Short);
 
     const positionInput = new TextInputBuilder()
         .setCustomId('positionInput')
         .setLabel('Position du bestiau')
         .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
-        .setRequired(false)
+        .setValue(target.position)
         .setStyle(TextInputStyle.Short);
 
     const detailsInput = new TextInputBuilder()
@@ -207,6 +247,8 @@ export const updateTargetModal = async ({ interaction }): Promise<void> => {
         .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
         .setRequired(false)
         .setStyle(TextInputStyle.Paragraph);
+
+    if (target.details) detailsInput.setValue(target.details);
 
     updateTargetModal
         .addComponents(new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(idInput))

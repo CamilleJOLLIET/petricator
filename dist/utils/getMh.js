@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMh = exports.filePath = void 0;
+exports.saveMh = exports.getMh = exports.filePath = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 exports.filePath = path.resolve(__dirname, '../../mh.json');
@@ -41,3 +41,8 @@ const getMh = () => {
     return JSON.parse(fs.readFileSync(exports.filePath, 'utf-8'));
 };
 exports.getMh = getMh;
+const saveMh = (mh) => {
+    fs.writeFileSync(exports.filePath, JSON.stringify(mh, null, 2));
+    return;
+};
+exports.saveMh = saveMh;

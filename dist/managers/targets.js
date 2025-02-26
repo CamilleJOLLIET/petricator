@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTarget = exports.updateTargetModal = exports.deleteAllTargets = exports.deleteAllTargetsConfirmation = exports.deleteTarget = exports.deleteTargetModal = exports.addTarget = exports.addTargetModal = exports.showTargets = void 0;
+exports.updateTarget = exports.updateTargetModal = exports.updateTargetChoices = exports.deleteAllTargets = exports.deleteAllTargetsConfirmation = exports.deleteTargetChoices = exports.addTarget = exports.addTargetModal = exports.showTargets = void 0;
 const discord_js_1 = require("discord.js");
 const fs = __importStar(require("fs"));
 const getMh_1 = require("../utils/getMh");
@@ -108,39 +108,27 @@ const addTarget = async ({ interaction }) => {
     return;
 };
 exports.addTarget = addTarget;
-const deleteTargetModal = async ({ interaction }) => {
-    const deleteTargetModal = new discord_js_1.ModalBuilder()
-        .setCustomId('deleteTargetModal')
-        .setTitle('Supprime une cible prioritaire');
-    const idInput = new discord_js_1.TextInputBuilder()
-        .setCustomId('idInput')
-        .setLabel('ID du bestiau')
-        .setPlaceholder("Rend pas fou avé les brackets, juste l'ID.")
-        .setStyle(discord_js_1.TextInputStyle.Short);
-    deleteTargetModal.addComponents(new discord_js_1.ActionRowBuilder().addComponents(idInput));
-    await interaction.showModal(deleteTargetModal);
-};
-exports.deleteTargetModal = deleteTargetModal;
-const deleteTarget = async ({ interaction }) => {
+const deleteTargetChoices = async ({ interaction }) => {
+    const response = await buildTargetsChoices({ interaction }, 'supprimer');
+    const collector = response.resource.message.createMessageComponentCollector({ componentType: discord_js_1.ComponentType.StringSelect, time: 3_600_000 });
     try {
-        const targetId = interaction.fields.getTextInputValue('idInput');
-        const targetsFile = (0, getMh_1.getMh)().targets;
-        const targetObject = targetsFile.find(target => target.id === targetId);
-        if (!targetObject) {
-            await interaction.reply({ content: 'Cible non trouvée.', ephemeral: true });
-            return;
-        }
-        const updatedTargetsFile = targetsFile.filter(target => target.id !== targetId);
-        fs.writeFileSync(getMh_1.filePath, JSON.stringify(updatedTargetsFile, null, 2));
-        await interaction.reply({ content: 'La cible a bien été supprimée', ephemeral: true });
+        collector.on('collect', async (i) => {
+            const selection = i.values[0];
+            const mh = (0, getMh_1.getMh)();
+            mh.instructions.splice(parseInt(selection), 1);
+            (0, getMh_1.saveMh)(mh);
+            await i.reply(`La consigne a été supprimée !`);
+        });
     }
     catch (error) {
-        console.error(error);
-        await interaction.reply({ content: 'Une erreur est survenue, veuillez réessayer.', ephemeral: true });
+        await interaction.editReply({
+            content: `Une erreur est survenue pendant le choix de l'instruction à supprimer: ${error}`,
+            components: []
+        });
     }
     return;
 };
-exports.deleteTarget = deleteTarget;
+exports.deleteTargetChoices = deleteTargetChoices;
 const deleteAllTargetsConfirmation = async ({ interaction }) => {
     const confirm = new discord_js_1.ButtonBuilder()
         .setCustomId('confirm')
@@ -162,13 +150,11 @@ const deleteAllTargetsConfirmation = async ({ interaction }) => {
     try {
         const confirmation = await response.resource.message.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
         if (confirmation.customId === 'confirm') {
-            console.log('confirm');
             await confirmation.update({ content: `Allez c'est parti !`, components: [] });
             await (0, exports.deleteAllTargets)({ interaction });
             await interaction.editReply({ content: `C'est bon c'est tout clean !` });
         }
         else if (confirmation.customId === 'cancel') {
-            console.log('cancel');
             await confirmation.update({ content: `Y'est pas fou lui...`, components: [] });
             await interaction.editReply({ content: `Allez on fait comme si rien ne s'était passé...` });
         }
@@ -191,26 +177,73 @@ const deleteAllTargets = async ({ interaction }) => {
     return;
 };
 exports.deleteAllTargets = deleteAllTargets;
-const updateTargetModal = async ({ interaction }) => {
+const buildTargetsChoices = async ({ interaction }, action) => {
+    const mhFile = (0, getMh_1.getMh)();
+    const targets = mhFile.targets;
+    if (!targets.length) {
+        interaction.reply({ content: 'Aucune cible à mettre à jour.', ephemeral: true });
+        return;
+    }
+    const selectTargetInput = new discord_js_1.StringSelectMenuBuilder()
+        .setCustomId('selectTargetInput')
+        .setPlaceholder("Liste des cibles existantes");
+    for (let index = 0; index < targets.length; index++) {
+        const element = targets[index];
+        const label = element.name.length > 50 ? `${element.name.slice(0, 50)}...` : element.name;
+        selectTargetInput.addOptions(new discord_js_1.StringSelectMenuOptionBuilder()
+            .setLabel(label)
+            .setValue(index.toString()));
+    }
+    const row = new discord_js_1.ActionRowBuilder()
+        .addComponents(selectTargetInput);
+    return await interaction.reply({
+        content: `Choisis la cible à ${action}.`,
+        components: [row],
+        withResponse: true,
+        ephemeral: true
+    });
+};
+const updateTargetChoices = async ({ interaction }) => {
+    const response = await buildTargetsChoices({ interaction }, 'mettre à jour');
+    const collector = response.resource.message.createMessageComponentCollector({ componentType: discord_js_1.ComponentType.StringSelect, time: 3_600_000 });
+    try {
+        collector.on('collect', async (i) => {
+            const selection = i.values[0];
+            const targets = (0, getMh_1.getMh)().targets;
+            const target = targets[parseInt(selection)];
+            await (0, exports.updateTargetModal)(i, target, selection);
+        });
+    }
+    catch (error) {
+        await interaction.editReply({
+            content: `Une erreur est survenue pendant le choix de l'instruction à supprimer: ${error}`,
+            components: []
+        });
+    }
+    return;
+};
+exports.updateTargetChoices = updateTargetChoices;
+const updateTargetModal = async (interaction, target, selection) => {
     const updateTargetModal = new discord_js_1.ModalBuilder()
-        .setCustomId('updateTargetModal')
-        .setTitle('Modifie une cible prioritaire');
+        .setCustomId(`updateTargetModal-${selection}`)
+        .setTitle(`Modifie une cible prioritaire numéro ${parseInt(selection) + 1}`);
     const idInput = new discord_js_1.TextInputBuilder()
         .setCustomId('idInput')
         .setLabel('ID du bestiau')
         .setPlaceholder("Rend pas fou avé les brackets, juste l'ID.")
+        .setValue(target.id)
         .setStyle(discord_js_1.TextInputStyle.Short);
     const nameInput = new discord_js_1.TextInputBuilder()
         .setCustomId('nameInput')
         .setLabel('Nom du bestiau')
         .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
-        .setRequired(false)
+        .setValue(target.name)
         .setStyle(discord_js_1.TextInputStyle.Short);
     const positionInput = new discord_js_1.TextInputBuilder()
         .setCustomId('positionInput')
         .setLabel('Position du bestiau')
         .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
-        .setRequired(false)
+        .setValue(target.position)
         .setStyle(discord_js_1.TextInputStyle.Short);
     const detailsInput = new discord_js_1.TextInputBuilder()
         .setCustomId('detailsInput')
@@ -218,6 +251,8 @@ const updateTargetModal = async ({ interaction }) => {
         .setPlaceholder("Laisse le champ vide si tu veux pas le changer.")
         .setRequired(false)
         .setStyle(discord_js_1.TextInputStyle.Paragraph);
+    if (target.details)
+        detailsInput.setValue(target.details);
     updateTargetModal
         .addComponents(new discord_js_1.ActionRowBuilder().addComponents(idInput))
         .addComponents(new discord_js_1.ActionRowBuilder().addComponents(nameInput))

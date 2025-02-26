@@ -4,25 +4,43 @@
       "id": "76353",
       "name": "Cageux",
       "position": "Il tente de s'enfuir !",
-      "details": "On tire à vue !"
+      "details": "On le laisse agoniser ! LONGTEMPS !"
     }
   ],
   "instructions": [
     {
       "content": "Il faut soigner Cageux !",
-			"usersConcerned": [
+      "usersConcerned": [
         "76353",
         "@sacroteur"
       ],
-			"date": "2025-02-25T04:43:51+00:00"
+      "date": "2025-02-25T04:43:51+00:00"
     },
-		{
+    {
       "content": "Non ! En fait on le bute !",
-			"usersConcerned": [
+      "usersConcerned": [
         "76353",
         "@sacroteur"
       ],
-			"date": "2025-02-25T04:43:51+00:00"
+      "date": "26/02/2025 17:43:49"
+    },
+    {
+      "content": "Mais on le fait souffrir",
+      "usersConcerned": [],
+      "date": "25/02/2025 12:03:20"
     }
-  ]
+  ],
+	"missions": [
+		{
+			"id": "52937",
+			"owner": "Petrichore",
+			"leader": "Petrichore",
+			"currentStep": "L'équipe doit tuer un monstre 'Berserker'",
+			"members": [
+				"Petrichore",
+				"Korben",
+				"Cageux"
+			]
+		}
+	]
 }
