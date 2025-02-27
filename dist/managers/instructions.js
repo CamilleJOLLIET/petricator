@@ -76,7 +76,10 @@ const deleteInstructionChoices = async ({ interaction }) => {
             const mh = (0, getMh_1.getMh)();
             mh.instructions.splice(parseInt(selection), 1);
             (0, getMh_1.saveMh)(mh);
-            await i.reply(`La consigne a été supprimée !`);
+            await i.reply({
+                content: `La consigne a été supprimée !`,
+                ephemeral: true
+            });
         });
     }
     catch (error) {

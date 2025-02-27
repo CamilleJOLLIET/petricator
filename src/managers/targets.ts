@@ -92,7 +92,10 @@ export const deleteTargetChoices = async ({ interaction }): Promise<void> => {
             const mh = getMh();
             mh.targets.splice(parseInt(selection), 1);
             saveMh(mh);
-            await i.reply(`La cible a été supprimée !`);
+            await i.reply({
+                content: `La cible a été supprimée !`,
+                ephemeral: true
+            });
         });
     } catch (error) {
         await interaction.editReply({ 

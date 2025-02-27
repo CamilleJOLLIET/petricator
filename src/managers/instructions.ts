@@ -95,7 +95,10 @@ export const deleteInstructionChoices = async ({ interaction }): Promise<void> =
             mh.instructions.splice(parseInt(selection), 1);
             saveMh(mh);
             
-            await i.reply(`La consigne a été supprimée !`);
+            await i.reply({
+                content: `La consigne a été supprimée !`,
+                ephemeral: true
+            });
         });
     } catch (error) {
         await interaction.editReply({ 

@@ -98,7 +98,10 @@ const deleteMissionChoices = async ({ interaction }) => {
             const mh = (0, getMh_1.getMh)();
             mh.missions.splice(parseInt(selection), 1);
             (0, getMh_1.saveMh)(mh);
-            await i.reply(`La consigne a été supprimée !`);
+            await i.reply({
+                content: `La mission a été supprimée !`,
+                ephemeral: true
+            });
         });
     }
     catch (error) {
