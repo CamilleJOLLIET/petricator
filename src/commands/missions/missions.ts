@@ -1,5 +1,11 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { showMissions } from '../../managers/missions';
+import {
+    addMissionModal,
+    deleteAllMissionsConfirmation,
+    deleteMissionChoices,
+    showMissions,
+    updateMissionChoices
+} from '../../managers/missions';
 
 module.exports = {
     run: ({ interaction }) => {
@@ -8,10 +14,10 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
 
         if (subcommand === 'show') showMissions({ interaction });
-        // if (subcommand === 'add') addInstructionModal({ interaction });
-        // if (subcommand === 'delete') deleteInstructionChoices({ interaction });
-        // if (subcommand === 'delete-all') deleteAllInstructionsConfirmation({ interaction });
-        // if (subcommand === 'update') updateInstructionChoices({ interaction });
+        if (subcommand === 'add') addMissionModal({ interaction });
+        if (subcommand === 'delete') deleteMissionChoices({ interaction });
+        if (subcommand === 'delete-all') deleteAllMissionsConfirmation({ interaction });
+        if (subcommand === 'update') updateMissionChoices({ interaction });
     },
     data: new SlashCommandBuilder()
         .setName('missions')

@@ -115,14 +115,14 @@ const deleteTargetChoices = async ({ interaction }) => {
         collector.on('collect', async (i) => {
             const selection = i.values[0];
             const mh = (0, getMh_1.getMh)();
-            mh.instructions.splice(parseInt(selection), 1);
+            mh.targets.splice(parseInt(selection), 1);
             (0, getMh_1.saveMh)(mh);
-            await i.reply(`La consigne a été supprimée !`);
+            await i.reply(`La cible a été supprimée !`);
         });
     }
     catch (error) {
         await interaction.editReply({
-            content: `Une erreur est survenue pendant le choix de l'instruction à supprimer: ${error}`,
+            content: `Une erreur est survenue pendant le choix de la cible à supprimer: ${error}`,
             components: []
         });
     }

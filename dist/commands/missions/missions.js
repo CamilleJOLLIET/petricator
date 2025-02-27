@@ -9,10 +9,14 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === 'show')
             (0, missions_1.showMissions)({ interaction });
-        // if (subcommand === 'add') addInstructionModal({ interaction });
-        // if (subcommand === 'delete') deleteInstructionChoices({ interaction });
-        // if (subcommand === 'delete-all') deleteAllInstructionsConfirmation({ interaction });
-        // if (subcommand === 'update') updateInstructionChoices({ interaction });
+        if (subcommand === 'add')
+            (0, missions_1.addMissionModal)({ interaction });
+        if (subcommand === 'delete')
+            (0, missions_1.deleteMissionChoices)({ interaction });
+        if (subcommand === 'delete-all')
+            (0, missions_1.deleteAllMissionsConfirmation)({ interaction });
+        if (subcommand === 'update')
+            (0, missions_1.updateMissionChoices)({ interaction });
     },
     data: new discord_js_1.SlashCommandBuilder()
         .setName('missions')
