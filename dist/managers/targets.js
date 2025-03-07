@@ -42,17 +42,23 @@ const showTargets = ({ interaction }) => {
     const embed = new discord_js_1.EmbedBuilder()
         .setTitle('🎯 Cibles prioritaires 🎯')
         .setColor('#FF69B4');
-    if (targets.length) {
-        for (const target of targets) {
-            embed.addFields({
-                name: `[${target.id}] ${target.name}`,
-                value: target.details ? target.position + '\n' + target.details : target.position,
-            });
+    try {
+        if (targets.length) {
+            for (const target of targets) {
+                embed.addFields({
+                    name: `[${target.id}] ${target.name}`,
+                    value: target.details ? target.position + '\n' + target.details : target.position,
+                });
+            }
+            ;
         }
-        ;
+        else {
+            embed.setFooter({ text: 'Aucune cible définie' });
+        }
     }
-    else {
-        embed.setFooter({ text: 'Aucune cible définie' });
+    catch (error) {
+        console.log(error);
+        embed.setFooter({ text: 'Une erreur est survenue.' });
     }
     interaction.reply({ embeds: [embed] });
     return;

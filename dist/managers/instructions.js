@@ -9,15 +9,22 @@ const showInstructions = ({ interaction }) => {
         .setTitle('📝 Consignes 📝')
         .setColor('#FF69B4');
     if (instructions.length) {
-        for (const instruction of instructions) {
-            embed.addFields({
-                name: instruction.content,
-                value: instruction.usersConcerned?.length ?
+        try {
+            instructions.forEach((instruction, i) => {
+                let value = instruction.content + '\n';
+                let fieldFooter = instruction.usersConcerned?.length ?
                     instruction.usersConcerned.join(', ') + '\n' + instruction.date :
-                    instruction.date,
+                    instruction.date;
+                embed.addFields({
+                    name: `Consigne numéro ${i + 1}`,
+                    value: value + fieldFooter,
+                });
             });
         }
-        ;
+        catch (error) {
+            console.log(error);
+            embed.setFooter({ text: 'Erreur lors de la récupération des consignes.' });
+        }
     }
     else {
         embed.setFooter({ text: 'Aucune consigne en cours. Instant free boobs !' });

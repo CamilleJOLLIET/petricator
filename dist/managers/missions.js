@@ -8,17 +8,23 @@ const showMissions = ({ interaction }) => {
     const embed = new discord_js_1.EmbedBuilder()
         .setTitle('📜 Missions 📜')
         .setColor('#FF69B4');
-    if (missions.length) {
-        for (const mission of missions) {
-            embed.addFields({
-                name: `[${mission.id}] Mission de ${mission.owner}`,
-                value: `Leader: ${mission.leader}\nEtape en cours: ${mission.currentStep}\nMembres: ${mission.members?.join(', ')}`,
-            });
+    try {
+        if (missions.length) {
+            for (const mission of missions) {
+                embed.addFields({
+                    name: `[${mission.id}] Mission de ${mission.owner}`,
+                    value: `Leader: ${mission.leader}\nEtape en cours: ${mission.currentStep}\nMembres: ${mission.members?.join(', ')}`,
+                });
+            }
+            ;
         }
-        ;
+        else {
+            embed.setFooter({ text: 'Aucune mission en cours. Instant free boobs !' });
+        }
     }
-    else {
-        embed.setFooter({ text: 'Aucune consigne en cours. Instant free boobs !' });
+    catch (error) {
+        console.log(error);
+        embed.setFooter({ text: 'Erreur lors de la récupération des missions.' });
     }
     interaction.reply({ embeds: [embed] });
     return;
